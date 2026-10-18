@@ -47,6 +47,9 @@ class TeacherResponse(BaseModel):
     id: int
     email: str
     full_name: str
+    institution: Optional[str] = "RV College of Engineering (RVCE)"
+    department: Optional[str] = "Computer Science & Engineering"
+    designation: Optional[str] = "Assistant Professor"
     is_active: bool
     is_demo: bool = False
     created_at: Optional[datetime] = None
@@ -54,6 +57,15 @@ class TeacherResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
+class TeacherProfileUpdate(BaseModel):
+    """Schema for updating teacher profile and institutional affiliation."""
+
+    full_name: Optional[str] = Field(None, min_length=2, max_length=150)
+    email: Optional[EmailStr] = None
+    institution: Optional[str] = Field(None, max_length=200)
+    department: Optional[str] = Field(None, max_length=200)
+    designation: Optional[str] = Field(None, max_length=100)
 
 
 class AuthMessage(BaseModel):

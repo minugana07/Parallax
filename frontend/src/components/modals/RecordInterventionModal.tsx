@@ -39,6 +39,26 @@ export const RecordInterventionModal: React.FC<RecordInterventionModalProps> = (
 
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [studentOptions, setStudentOptions] = useState<Array<{ id: number; label: string }>>([])
+
+  useEffect(() => {
+    apiService.getClasses().then((classes) => {
+      const list: Array<{ id: number; label: string }> = []
+      const seen = new Set<number>()
+      classes.forEach((c) => {
+        c.students?.forEach((st) => {
+          if (!seen.has(st.id)) {
+            seen.add(st.id)
+            list.push({
+              id: st.id,
+              label: `${st.student_id_code} • ${st.full_name} (${st.semester || st.grade_level || 'Sem 5'} - Sec ${st.section || 'A'})`,
+            })
+          }
+        })
+      })
+      if (list.length > 0) setStudentOptions(list)
+    }).catch(console.error)
+  }, [])
 
   // Load gaps if initialGap is not provided
   useEffect(() => {
@@ -280,13 +300,17 @@ export const RecordInterventionModal: React.FC<RecordInterventionModalProps> = (
                 <select
                   value={studentId}
                   onChange={(e) => setStudentId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E7E6F1] text-sm text-[#24223D] focus:outline-hidden focus:border-[#7657F6]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E7E6F1] text-sm text-[#24223D] focus:outline-hidden focus:border-[#7657F6] bg-white"
                 >
-                  <option value="1">STU-101 • Aarav Patel (Grade 9-A)</option>
-                  <option value="4">STU-104 • Ananya Rao (Grade 9-A)</option>
-                  <option value="7">STU-107 • Rohan Verma (Grade 9-B)</option>
-                  <option value="10">STU-110 • Pooja Hegde (Grade 9-B)</option>
-                  <option value="13">STU-113 • Siddharth Menon (Grade 10-A)</option>
+                  {studentOptions.length > 0 ? (
+                    studentOptions.map((st) => (
+                      <option key={st.id} value={st.id}>
+                        {st.label}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No enrolled students found</option>
+                  )}
                 </select>
               </div>
 
@@ -297,14 +321,14 @@ export const RecordInterventionModal: React.FC<RecordInterventionModalProps> = (
                 <select
                   value={strategyType}
                   onChange={(e) => setStrategyType(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E7E6F1] text-sm text-[#24223D] focus:outline-hidden focus:border-[#7657F6]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#E7E6F1] text-sm text-[#24223D] focus:outline-hidden focus:border-[#7657F6] bg-white"
                 >
-                  <option value="visual_area_model">Visual Area Algebra Tiles</option>
-                  <option value="phet_simulation">PhET Interactive Simulation</option>
-                  <option value="peer_tutoring">Structured Peer Tutoring</option>
-                  <option value="worked_examples">Guided Worked Examples</option>
-                  <option value="bench_laboratory">Hands-on Laboratory Practice</option>
-                  <option value="concept_revisit">Targeted Concept Revisit</option>
+                  <option value="interactive_simulation">Interactive Simulator & State Machine Walkthrough</option>
+                  <option value="guided_worked_examples">Guided Algorithmic Worked Examples</option>
+                  <option value="peer_tutoring">Structured Peer Code Review & Pair Debugging</option>
+                  <option value="bench_laboratory">Hands-on Laboratory Verification & Profiling</option>
+                  <option value="targeted_worksheet">Targeted Diagnostic Problem Set</option>
+                  <option value="concept_revisit">Targeted Invariant & Complexity Revisit</option>
                 </select>
               </div>
             </div>

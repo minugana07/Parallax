@@ -64,12 +64,69 @@ def run_safe_migrations() -> None:
                 logger.info("Adding is_archived column to students table...")
                 conn.execute(text("ALTER TABLE students ADD COLUMN is_archived BOOLEAN DEFAULT 0;"))
 
-        # Check class_id on assessments
+        # Check college & quiz fields on assessments
         if "assessments" in inspector.get_table_names():
             assessment_cols = [c["name"] for c in inspector.get_columns("assessments")]
             if "class_id" not in assessment_cols:
                 logger.info("Adding class_id column to assessments table...")
                 conn.execute(text("ALTER TABLE assessments ADD COLUMN class_id INTEGER REFERENCES classes(id);"))
+            if "assessment_type" not in assessment_cols:
+                logger.info("Adding assessment_type column to assessments table...")
+                conn.execute(text("ALTER TABLE assessments ADD COLUMN assessment_type VARCHAR(50) DEFAULT 'cie_exam';"))
+            if "status" not in assessment_cols:
+                logger.info("Adding status column to assessments table...")
+                conn.execute(text("ALTER TABLE assessments ADD COLUMN status VARCHAR(50) DEFAULT 'graded';"))
+            if "description" not in assessment_cols:
+                logger.info("Adding description column to assessments table...")
+                conn.execute(text("ALTER TABLE assessments ADD COLUMN description TEXT;"))
+            if "duration_minutes" not in assessment_cols:
+                logger.info("Adding duration_minutes column to assessments table...")
+                conn.execute(text("ALTER TABLE assessments ADD COLUMN duration_minutes INTEGER;"))
+            if "passing_score" not in assessment_cols:
+                logger.info("Adding passing_score column to assessments table...")
+                conn.execute(text("ALTER TABLE assessments ADD COLUMN passing_score FLOAT DEFAULT 40.0;"))
+            if "course_code" not in assessment_cols:
+                logger.info("Adding course_code column to assessments table...")
+                conn.execute(text("ALTER TABLE assessments ADD COLUMN course_code VARCHAR(50);"))
+            if "semester" not in assessment_cols:
+                logger.info("Adding semester column to assessments table...")
+                conn.execute(text("ALTER TABLE assessments ADD COLUMN semester VARCHAR(50);"))
+            if "total_questions" not in assessment_cols:
+                logger.info("Adding total_questions column to assessments table...")
+                conn.execute(text("ALTER TABLE assessments ADD COLUMN total_questions INTEGER DEFAULT 0;"))
+            if "quiz_data" not in assessment_cols:
+                logger.info("Adding quiz_data column to assessments table...")
+                conn.execute(text("ALTER TABLE assessments ADD COLUMN quiz_data TEXT;"))
+
+        # Check question_scores on student_assessment_scores
+        if "student_assessment_scores" in inspector.get_table_names():
+            score_cols = [c["name"] for c in inspector.get_columns("student_assessment_scores")]
+            if "question_scores" not in score_cols:
+                logger.info("Adding question_scores column to student_assessment_scores table...")
+                conn.execute(text("ALTER TABLE student_assessment_scores ADD COLUMN question_scores TEXT;"))
+
+        # Check course_code and semester on topics
+        if "topics" in inspector.get_table_names():
+            topic_cols = [c["name"] for c in inspector.get_columns("topics")]
+            if "course_code" not in topic_cols:
+                logger.info("Adding course_code column to topics table...")
+                conn.execute(text("ALTER TABLE topics ADD COLUMN course_code VARCHAR(50);"))
+            if "semester" not in topic_cols:
+                logger.info("Adding semester column to topics table...")
+                conn.execute(text("ALTER TABLE topics ADD COLUMN semester VARCHAR(50);"))
+
+        # Check institution, department, designation on users table
+        if "users" in inspector.get_table_names():
+            user_cols = [c["name"] for c in inspector.get_columns("users")]
+            if "institution" not in user_cols:
+                logger.info("Adding institution column to users table...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN institution VARCHAR(200) DEFAULT 'RV College of Engineering (RVCE)';"))
+            if "department" not in user_cols:
+                logger.info("Adding department column to users table...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN department VARCHAR(200) DEFAULT 'Computer Science & Engineering';"))
+            if "designation" not in user_cols:
+                logger.info("Adding designation column to users table...")
+                conn.execute(text("ALTER TABLE users ADD COLUMN designation VARCHAR(100) DEFAULT 'Assistant Professor';"))
 
     # 3. Ensure Demo Teacher exists and enhance demo records with RVCE classes
     db: Session = SessionLocal()
@@ -158,11 +215,40 @@ def run_safe_migrations() -> None:
             db.add_all(rvce_classes)
             db.commit()
 
-        # Link demo students to RVCE classes and populate academic fields
+        # Link demo students to RVCE classes, populate academic fields, and migrate to College USNs
         c_list = db.query(AcademicClass).filter(AcademicClass.teacher_id == demo_user.id).order_by(AcademicClass.id.asc()).all()
         if c_list and len(c_list) >= 4:
+            usn_map = {
+                "STU-101": "1RV23CS001",
+                "STU-102": "1RV23CS002",
+                "STU-103": "1RV23CS003",
+                "STU-104": "1RV23CS004",
+                "STU-105": "1RV23CS005",
+                "STU-106": "1RV23CS006",
+                "STU-107": "1RV23CS007",
+                "STU-108": "1RV23CS008",
+                "STU-109": "1RV23CS009",
+                "STU-110": "1RV23CS010",
+                "STU-111": "1RV23CS011",
+                "STU-112": "1RV23CS012",
+                "STU-201": "1RV24IS001",
+                "STU-202": "1RV24IS002",
+                "STU-203": "1RV24IS003",
+                "STU-204": "1RV24IS004",
+                "STU-205": "1RV24IS005",
+                "STU-206": "1RV24IS006",
+                "STU-207": "1RV24IS007",
+                "STU-208": "1RV24IS008",
+                "STU-209": "1RV24IS009",
+                "STU-210": "1RV24IS010",
+                "STU-211": "1RV24IS011",
+                "STU-212": "1RV24IS012",
+            }
             demo_students = db.query(Student).filter(Student.teacher_id == demo_user.id).all()
             for s in demo_students:
+                if s.student_id_code in usn_map:
+                    s.student_id_code = usn_map[s.student_id_code]
+
                 # Map based on existing grade/section or assign sequentially
                 target_class = c_list[0]
                 if s.section == "B" and "9" in str(s.grade_level):
@@ -178,18 +264,117 @@ def run_safe_migrations() -> None:
                 s.section = target_class.section
 
                 # Normalize clean RVCE institutional email if missing
-                if not s.email:
+                if not s.email or "@rvce.edu.in" not in s.email:
                     clean_name = re.sub(r'[^a-z0-9]', '', s.full_name.lower())
                     s.email = f"{clean_name}.cs23@rvce.edu.in"
+            db.commit()
 
             # Link existing demo assessments to matching classes
             demo_assessments = db.query(Assessment).filter(Assessment.teacher_id == demo_user.id).all()
             for asm in demo_assessments:
                 if not asm.class_id:
-                    if "9" in asm.grade_level:
+                    if "9" in str(asm.grade_level):
                         asm.class_id = c_list[0].id
                     else:
                         asm.class_id = c_list[2].id
+
+            # College-level curriculum normalization for Demo Teacher only (never modify real user records)
+            with engine.begin() as conn:
+                # Update demo students to college semesters and department
+                conn.execute(
+                    text("UPDATE students SET grade_level = 'Semester 5', semester = 'Semester 5' WHERE teacher_id = :uid AND grade_level LIKE '%Grade 9%';"),
+                    {"uid": demo_user.id},
+                )
+                conn.execute(
+                    text("UPDATE students SET grade_level = 'Semester 3', semester = 'Semester 3' WHERE teacher_id = :uid AND grade_level LIKE '%Grade 10%';"),
+                    {"uid": demo_user.id},
+                )
+                conn.execute(
+                    text("UPDATE students SET semester = grade_level WHERE teacher_id = :uid AND semester IS NULL;"),
+                    {"uid": demo_user.id},
+                )
+                conn.execute(
+                    text("UPDATE students SET department = 'Computer Science & Engineering' WHERE teacher_id = :uid AND department IS NULL;"),
+                    {"uid": demo_user.id},
+                )
+
+                # Update demo assessments to college continuous evaluation and lab formats
+                conn.execute(
+                    text("UPDATE assessments SET title = 'CIE-1: Graph Algorithms & Spanning Trees', subject = 'Data Structures & Algorithms', grade_level = 'Semester 5', semester = 'Semester 5', course_code = '22CS52', assessment_type = 'cie_exam', status = 'graded', passing_score = 20.0 WHERE teacher_id = :uid AND (title LIKE '%Diagnostic 1%' OR title LIKE '%Factoring%');"),
+                    {"uid": demo_user.id},
+                )
+                conn.execute(
+                    text("UPDATE assessments SET title = 'Lab Assessment 1: Process Scheduling & Threads', subject = 'Operating Systems', grade_level = 'Semester 5', semester = 'Semester 5', course_code = '22CS53', assessment_type = 'lab_test', status = 'graded', passing_score = 40.0 WHERE teacher_id = :uid AND (title LIKE '%Unit 2%' OR title LIKE '%Newton%');"),
+                    {"uid": demo_user.id},
+                )
+                conn.execute(
+                    text("UPDATE assessments SET title = 'Online Quiz 1: Dynamic Programming Concepts', subject = 'Data Structures & Algorithms', grade_level = 'Semester 5', semester = 'Semester 5', course_code = '22CS52', assessment_type = 'quiz', status = 'graded', total_questions = 3, duration_minutes = 20, passing_score = 16.0 WHERE teacher_id = :uid AND (title LIKE '%Quiz%' OR title LIKE '%Linear%');"),
+                    {"uid": demo_user.id},
+                )
+                conn.execute(
+                    text("UPDATE assessments SET title = 'CIE-2: Virtual Memory & Page Replacement', subject = 'Operating Systems', grade_level = 'Semester 5', semester = 'Semester 5', course_code = '22CS53', assessment_type = 'cie_exam', status = 'graded', passing_score = 20.0 WHERE teacher_id = :uid AND (title LIKE '%Diagnostic 2%' OR title LIKE '%Cellular%');"),
+                    {"uid": demo_user.id},
+                )
+                conn.execute(
+                    text("UPDATE assessments SET title = 'Midterm: Relational Schema & Normalization', subject = 'Database Management', grade_level = 'Semester 3', semester = 'Semester 3', course_code = '22IS32', assessment_type = 'midterm', status = 'graded', passing_score = 40.0 WHERE teacher_id = :uid AND (title LIKE '%Mid-Term%' OR title LIKE '%Coordinate%');"),
+                    {"uid": demo_user.id},
+                )
+                conn.execute(
+                    text("UPDATE assessments SET title = 'Quiz 2: Transaction Management & ACID', subject = 'Database Management', grade_level = 'Semester 3', semester = 'Semester 3', course_code = '22IS32', assessment_type = 'quiz', status = 'graded', total_questions = 3, duration_minutes = 25, passing_score = 24.0 WHERE teacher_id = :uid AND (title LIKE '%Mastery%' OR title LIKE '%Circuit%');"),
+                    {"uid": demo_user.id},
+                )
+
+            # Populate sample authored questions on quiz assessments if missing
+            import json
+            sample_quiz_questions = [
+                {
+                    "id": "q1",
+                    "question_text": "In a connected, undirected graph with positive edge weights, what does Prim's algorithm compute?",
+                    "question_type": "mcq",
+                    "options": [
+                        "The shortest path between two specific vertices",
+                        "A minimum spanning tree connecting all vertices with minimum total edge weight",
+                        "The strongly connected components of the graph",
+                        "A topological ordering of all vertices"
+                    ],
+                    "correct_answer": 1,
+                    "marks": 2.0,
+                    "explanation": "Prim's algorithm is a greedy algorithm that computes a Minimum Spanning Tree (MST) by iteratively growing a tree from an arbitrary root vertex."
+                },
+                {
+                    "id": "q2",
+                    "question_text": "What is the time complexity of Dijkstra's algorithm implemented with a binary min-heap for a graph with V vertices and E edges?",
+                    "question_type": "mcq",
+                    "options": [
+                        "O(V^2)",
+                        "O((V + E) log V)",
+                        "O(V + E)",
+                        "O(E^2 log V)"
+                    ],
+                    "correct_answer": 1,
+                    "marks": 2.0,
+                    "explanation": "Using a binary min-heap, each vertex extraction takes O(log V) and each decrease-key edge relaxation takes O(log V), yielding O((V + E) log V)."
+                },
+                {
+                    "id": "q3",
+                    "question_text": "Which pair of properties is required for a problem to be solvable via Dynamic Programming?",
+                    "question_type": "mcq",
+                    "options": [
+                        "Greedy choice property and disjoint subproblems",
+                        "Optimal substructure and overlapping subproblems",
+                        "Linear recurrence and divide-and-conquer",
+                        "Acyclic state transition without base cases"
+                    ],
+                    "correct_answer": 1,
+                    "marks": 2.0,
+                    "explanation": "Dynamic programming applies specifically when a problem possesses both optimal substructure (optimal solution contains optimal solutions to subproblems) and overlapping subproblems (same subproblems are solved repeatedly)."
+                }
+            ]
+            quiz_asms = db.query(Assessment).filter(Assessment.assessment_type == 'quiz').all()
+            for q_asm in quiz_asms:
+                if not q_asm.quiz_data:
+                    q_asm.quiz_data = json.dumps(sample_quiz_questions)
+                    q_asm.total_questions = len(sample_quiz_questions)
 
             db.commit()
 

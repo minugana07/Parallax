@@ -29,6 +29,10 @@ def test_dashboard_overview_endpoint():
     assert metrics["students_count"] >= 24
     assert metrics["assessments_count"] >= 6
     assert metrics["learning_gaps_count"] >= 1
+    assert "active_semesters" in metrics
+    assert "active_semesters_summary" in metrics
+    assert len(metrics["active_semesters"]) >= 1
+    assert "Sem" in metrics["active_semesters_summary"]
 
     # Check class performance data for charts
     assert "class_performance" in data

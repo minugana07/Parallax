@@ -25,6 +25,11 @@ from app.schemas.ai import (
     MemorySummaryRequest,
     MemorySummaryResponse,
 )
+from app.schemas.assessment import (
+    QuizGenerateRequest,
+    QuizGenerateResponse,
+    QuizQuestion,
+)
 
 router = APIRouter()
 
@@ -354,4 +359,39 @@ def summarize_memory(
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Memory summary failed: {str(exc)}",
+        )
+
+
+@router.post(
+    "/generate-quiz",
+    response_model=QuizGenerateResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Generate Quiz Questions with AI",
+    description="Generates college-level multiple choice questions with correct options, marks, and explanations.",
+)
+def generate_quiz(
+    payload: QuizGenerateRequest,
+    current_user: User = Depends(get_current_user),
+) -> QuizGenerateResponse:
+    try:
+        raw_res = gemini_service.generate_quiz_draft(
+            topic_name=payload.topic_name,
+            course_code=payload.course_code,
+            semester=payload.semester,
+            subject=payload.subject or "Computer Science & Engineering",
+            question_count=payload.question_count,
+            difficulty=payload.difficulty or "intermediate",
+        )
+        questions = [
+            QuizQuestion(**q) for q in raw_res.get("questions", [])
+        ]
+        return QuizGenerateResponse(
+            topic_name=payload.topic_name,
+            questions=questions,
+            model_used=raw_res.get("model_used", "gemini-3.8-flash"),
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Quiz generation failed: {str(exc)}",
         )

@@ -17,7 +17,16 @@ class Assessment(Base):
     title = Column(String(150), nullable=False)
     subject = Column(String(100), nullable=False)
     grade_level = Column(String(50), nullable=False, default="Semester 5")
+    semester = Column(String(50), nullable=True)  # e.g. "Semester 5"
+    course_code = Column(String(50), nullable=True)  # e.g. "22CS52"
+    assessment_type = Column(String(50), nullable=False, default="cie_exam")  # cie_exam, quiz, lab_test, assignment, midterm, project
+    status = Column(String(50), nullable=False, default="graded")  # draft, scheduled, completed, graded
+    description = Column(Text, nullable=True)
+    duration_minutes = Column(Integer, nullable=True)
+    passing_score = Column(Float, nullable=True, default=40.0)
     max_score = Column(Float, nullable=False, default=100.0)
+    total_questions = Column(Integer, nullable=False, default=0)
+    quiz_data = Column(Text, nullable=True)  # JSON-encoded authored questions, options, answers, and explanations
     assessment_date = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -34,4 +43,5 @@ class StudentAssessmentScore(Base):
     score = Column(Float, nullable=False)
     percentage = Column(Float, nullable=True)
     feedback = Column(Text, nullable=True)
+    question_scores = Column(Text, nullable=True)  # JSON-encoded per-question marks/responses
     recorded_at = Column(DateTime(timezone=True), server_default=func.now())

@@ -25,7 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose,
   currentTab,
   onSelectTab,
-  connectionState,
+  connectionState: _connectionState,
 }) => {
   const [logoSrc, setLogoSrc] = useState('/images/parallax-logo.jpeg')
   const [logoLoadError, setLogoLoadError] = useState(false)
@@ -213,9 +213,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Bottom System Status */}
+        {/* Bottom System Info */}
         <div className="p-4 border-t border-white/10 bg-[#080b18]">
-          <div className="flex items-center justify-between text-xs text-white/70 mb-1.5">
+          <div className="flex items-center justify-between text-xs text-white/70 mb-1">
             <span className="flex items-center gap-1.5">
               <Database className="w-3.5 h-3.5 text-[#35D6D0]" />
               <span>SQLite Engine</span>
@@ -223,16 +223,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span className="font-mono text-[10px] text-[#65E6AC]">v0.2.0</span>
           </div>
           <div className="flex items-center justify-between text-[11px] text-[#77758D]">
-            <span>Teacher Intelligence Mode</span>
-            <span
-              className={`inline-block w-2 h-2 rounded-full ${
-                connectionState === 'connected'
-                  ? 'bg-[#65E6AC]'
-                  : connectionState === 'checking'
-                  ? 'bg-[#35D6D0] animate-pulse'
-                  : 'bg-[#E9B45C]'
-              }`}
-            />
+            <span>Teacher Intelligence Platform</span>
+            <span className="text-[10px] text-[#35D6D0] font-medium">RVCE Edition</span>
           </div>
         </div>
       </aside>

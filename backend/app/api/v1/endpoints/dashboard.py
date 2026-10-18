@@ -40,9 +40,10 @@ def get_dashboard_overview(
     uid = current_user.id
 
     # 1. Metrics (Scoped strictly to authenticated teacher)
-    academic_classes_count = db.query(AcademicClass).filter(AcademicClass.teacher_id == uid, AcademicClass.is_archived == False).count()
-    if academic_classes_count > 0:
-        classes_count = academic_classes_count
+    active_classes = db.query(AcademicClass).filter(AcademicClass.teacher_id == uid, AcademicClass.is_archived == False).all()
+    if active_classes:
+        classes_count = len(active_classes)
+        active_semesters = sorted(list({c.semester for c in active_classes if c.semester}))
     else:
         classes_tuples = (
             db.query(Student.grade_level, Student.section)
@@ -51,6 +52,13 @@ def get_dashboard_overview(
             .all()
         )
         classes_count = len(classes_tuples)
+        active_semesters = sorted(list({t[0] for t in classes_tuples if t[0]}))
+
+    short_sems = [s.replace("Semester", "Sem").strip() for s in active_semesters]
+    if short_sems:
+        sem_summary = f"Active Semester Sections ({', '.join(short_sems)})"
+    else:
+        sem_summary = "Enrolled Course Sections"
 
     students_count = db.query(Student).filter(Student.teacher_id == uid, Student.is_archived == False).count()
     assessments_count = db.query(Assessment).filter(Assessment.teacher_id == uid).count()
@@ -78,6 +86,8 @@ def get_dashboard_overview(
         learning_gaps_count=learning_gaps_count,
         active_interventions_count=active_interventions_count,
         resolved_outcomes_count=resolved_outcomes_count,
+        active_semesters_summary=sem_summary,
+        active_semesters=active_semesters,
     )
 
     # 2. Class Performance Trends (for Recharts)
@@ -147,13 +157,15 @@ def get_dashboard_overview(
     for item in topic_gaps_map.values():
         evidence_str = " | ".join(item["evidence_list"][:2]) if item["evidence_list"] else "Assessment item errors observed."
         strategy = (
-            "Visual geometric area model + structured pair work"
-            if "Factoring" in item["topic_name"]
-            else "Interactive PhET simulation + explicit contact-force checklists"
-            if "Newton" in item["topic_name"]
-            else "Multimeter physical breadboard circuit verification"
-            if "Circuit" in item["topic_name"]
-            else "Targeted concept revisit with dual-pathway diagrams"
+            "Interactive AVL tree simulator + rotational invariant visualization"
+            if any(k in item["topic_name"] for k in ["Tree", "AVL", "Data Structure"])
+            else "Resource allocation graph tracing + Peterson's algorithm walkthrough"
+            if any(k in item["topic_name"] for k in ["Deadlock", "Process", "OS", "Thread"])
+            else "Functional dependency matrix + lossless join decomposition walkthrough"
+            if any(k in item["topic_name"] for k in ["Normal", "DBMS", "Database", "SQL"])
+            else "Cache line miss profiling + memory stride benchmarking lab"
+            if any(k in item["topic_name"] for k in ["Cache", "Architecture", "Memory"])
+            else "Targeted concept revisit with dual-pathway diagrams & lab code walkthrough"
         )
         learning_gaps_summary.append(
             LearningGapSummary(
@@ -221,7 +233,7 @@ def get_dashboard_overview(
                 average_score=round(avg_score, 1),
                 average_percent=round(avg_pct, 1),
                 submission_count=len(scores),
-                total_enrolled=12 if "9" in asm.grade_level else 12,
+                total_enrolled=len(scores) if len(scores) > 0 else (students_count or 15),
                 assessment_date=asm.assessment_date.strftime("%d %b %Y") if asm.assessment_date else "Recently",
             )
         )
@@ -255,7 +267,7 @@ def get_dashboard_overview(
                 student_id_code=student.student_id_code,
                 student_name=student.full_name,
                 assessment_evidence=gap.evidence if gap and gap.evidence else "Diagnostic score below competency threshold.",
-                learning_gap=f"Conceptual gap in {topic.name if topic else 'topic'}; sign & coefficient handling." if topic else "Identified gap",
+                learning_gap=gap.evidence if gap and gap.evidence else f"Conceptual bottleneck in {topic.name if topic else 'topic'}; requires targeted faculty review.",
                 gap_severity=gap.severity if gap else "moderate",
                 intervention_title=interv.title,
                 strategy_type=interv.strategy_type,

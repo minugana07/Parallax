@@ -11,6 +11,8 @@ class DashboardMetrics(BaseModel):
     learning_gaps_count: int = Field(..., description="Identified learning areas needing attention")
     active_interventions_count: int = Field(..., description="Teacher interventions currently active or approved")
     resolved_outcomes_count: int = Field(..., description="Gaps verified resolved via follow-up assessment")
+    active_semesters_summary: Optional[str] = Field(None, description="Formatted summary of active semesters taught")
+    active_semesters: List[str] = Field(default_factory=list, description="List of unique active semesters taught")
 
 
 class ClassPerformanceItem(BaseModel):

@@ -191,3 +191,25 @@ def test_rvce_classes_multi_teacher_isolation():
     # Teacher B's class list should not include Teacher A's class
     t2_classes = client.get("/api/v1/classes").json()
     assert all(c["id"] != t1_class_id for c in t2_classes)
+
+
+def test_user_5_classes_workload_and_roster():
+    """Verify that a user with 5 assigned classes has 350 enrolled students across Semesters 1, 3, 5, 7."""
+    from app.db.session import SessionLocal
+    from app.models.user import User
+    from app.models.academic_class import AcademicClass
+    from app.models.student import Student
+
+    db = SessionLocal()
+    user6 = db.query(User).filter(User.id == 6).first()
+    if user6:
+        classes = db.query(AcademicClass).filter(AcademicClass.teacher_id == 6, AcademicClass.is_archived == False).all()
+        assert len(classes) == 5
+        student_count = db.query(Student).filter(Student.teacher_id == 6, Student.is_archived == False).count()
+        assert student_count == 350
+        semesters = {c.semester for c in classes}
+        assert "Semester 1" in semesters
+        assert "Semester 3" in semesters
+        assert "Semester 5" in semesters
+        assert "Semester 7" in semesters
+    db.close()

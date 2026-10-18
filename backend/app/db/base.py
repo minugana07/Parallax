@@ -23,5 +23,7 @@ def init_db(seed_demo: bool = True) -> None:
             seed_demo_data(db)
         finally:
             db.close()
+        # Run safe migrations again to link any newly seeded records to demo user if needed
+        run_safe_migrations()
 
 

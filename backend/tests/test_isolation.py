@@ -18,16 +18,18 @@ from app.models.intervention import Intervention
 from app.models.topic import LearningGap
 
 def setup_module():
-    init_db(seed_demo=True)
+    init_db(seed_demo=False)
     db = SessionLocal()
-    demo_user = db.query(User).filter(User.is_demo == True).first()
-    demo_id = demo_user.id if demo_user else 1
-    db.query(Assessment).filter(Assessment.teacher_id != demo_id).delete(synchronize_session=False)
-    db.query(Student).filter(Student.teacher_id != demo_id).delete(synchronize_session=False)
-    db.query(Intervention).filter(Intervention.teacher_id != demo_id).delete(synchronize_session=False)
-    db.query(LearningGap).filter(LearningGap.teacher_id != demo_id).delete(synchronize_session=False)
-    db.query(User).filter(User.is_demo == False).delete(synchronize_session=False)
-    db.commit()
+    test_emails = ["teacher.a@school.org", "teacher.b@school.org"]
+    test_users = db.query(User).filter(User.email.in_(test_emails)).all()
+    test_uids = [u.id for u in test_users]
+    if test_uids:
+        db.query(Assessment).filter(Assessment.teacher_id.in_(test_uids)).delete(synchronize_session=False)
+        db.query(Student).filter(Student.teacher_id.in_(test_uids)).delete(synchronize_session=False)
+        db.query(Intervention).filter(Intervention.teacher_id.in_(test_uids)).delete(synchronize_session=False)
+        db.query(LearningGap).filter(LearningGap.teacher_id.in_(test_uids)).delete(synchronize_session=False)
+        db.query(User).filter(User.id.in_(test_uids)).delete(synchronize_session=False)
+        db.commit()
     db.close()
 
 

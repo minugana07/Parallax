@@ -8,6 +8,7 @@ from app.schemas.auth import (
     TeacherRegister,
     TeacherLogin,
     TeacherResponse,
+    TeacherProfileUpdate,
     AuthMessage,
 )
 from app.core.security import (
@@ -78,6 +79,9 @@ def register_teacher(
         id=new_user.id,
         email=new_user.email,
         full_name=new_user.full_name,
+        institution=new_user.institution or "RV College of Engineering (RVCE)",
+        department=new_user.department or "Computer Science & Engineering",
+        designation=new_user.designation or "Assistant Professor",
         is_active=new_user.is_active,
         is_demo=new_user.is_demo,
         created_at=new_user.created_at,
@@ -144,6 +148,9 @@ def login_teacher(
         id=user.id,
         email=user.email,
         full_name=user.full_name,
+        institution=user.institution or "RV College of Engineering (RVCE)",
+        department=user.department or "Computer Science & Engineering",
+        designation=user.designation or "Assistant Professor",
         is_active=user.is_active,
         is_demo=user.is_demo,
         created_at=user.created_at,
@@ -191,6 +198,9 @@ def login_demo_teacher(
         id=demo_user.id,
         email=demo_user.email,
         full_name=demo_user.full_name,
+        institution=demo_user.institution or "RV College of Engineering (RVCE)",
+        department=demo_user.department or "Computer Science & Engineering",
+        designation=demo_user.designation or "Assistant Professor",
         is_active=demo_user.is_active,
         is_demo=True,
         created_at=demo_user.created_at,
@@ -235,6 +245,63 @@ def get_current_teacher_profile(
         id=current_user.id,
         email=current_user.email,
         full_name=current_user.full_name,
+        institution=current_user.institution or "RV College of Engineering (RVCE)",
+        department=current_user.department or "Computer Science & Engineering",
+        designation=current_user.designation or "Assistant Professor",
+        is_active=current_user.is_active,
+        is_demo=current_user.is_demo,
+        created_at=current_user.created_at,
+        csrf_token=csrf_cookie,
+    )
+
+
+@router.put(
+    "/profile",
+    response_model=TeacherResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Update Teacher Profile",
+    description="Updates the profile details (name, email, institution, department, designation) of the currently authenticated teacher.",
+)
+def update_teacher_profile(
+    payload: TeacherProfileUpdate,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> TeacherResponse:
+    if payload.full_name is not None and payload.full_name.strip():
+        current_user.full_name = payload.full_name.strip()
+
+    if payload.email is not None and payload.email.strip():
+        normalized = payload.email.strip().lower()
+        if normalized != current_user.email:
+            existing = db.query(User).filter(User.email == normalized, User.id != current_user.id).first()
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="An account with this email address already exists.",
+                )
+            current_user.email = normalized
+
+    if payload.institution is not None:
+        current_user.institution = payload.institution.strip() or "RV College of Engineering (RVCE)"
+
+    if payload.department is not None:
+        current_user.department = payload.department.strip() or "Computer Science & Engineering"
+
+    if payload.designation is not None:
+        current_user.designation = payload.designation.strip() or "Assistant Professor"
+
+    db.commit()
+    db.refresh(current_user)
+
+    csrf_cookie = request.cookies.get("parallax_csrf")
+    return TeacherResponse(
+        id=current_user.id,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        institution=current_user.institution or "RV College of Engineering (RVCE)",
+        department=current_user.department or "Computer Science & Engineering",
+        designation=current_user.designation or "Assistant Professor",
         is_active=current_user.is_active,
         is_demo=current_user.is_demo,
         created_at=current_user.created_at,

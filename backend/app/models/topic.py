@@ -11,7 +11,9 @@ class Topic(Base):
     id = Column(Integer, primary_key=True, index=True)
     subject = Column(String(100), nullable=False)
     name = Column(String(150), nullable=False)
-    grade_level = Column(String(20), nullable=False)
+    grade_level = Column(String(50), nullable=False, default="Semester 5")
+    semester = Column(String(50), nullable=True)  # e.g. "Semester 5"
+    course_code = Column(String(50), nullable=True)  # e.g. "22CS52"
     description = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

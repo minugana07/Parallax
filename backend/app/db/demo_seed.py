@@ -25,133 +25,251 @@ def seed_demo_data(db: Session, force: bool = False) -> bool:
 
     now = datetime.now(timezone.utc)
 
-    # 1. Topics
+    from app.models.user import User
+    from app.db.migrations import DEMO_TEACHER_EMAIL
+    demo_user = db.query(User).filter(User.email == DEMO_TEACHER_EMAIL).first()
+    demo_uid = demo_user.id if demo_user else None
+
+    # 1. Topics (Higher-Education Computing & Engineering)
     topics_data = [
-        # Grade 9 Mathematics
+        # Semester 5 - Data Structures & Algorithms
         Topic(
-            subject="Mathematics",
-            name="Quadratic Factoring & Trinomial Roots",
-            grade_level="Grade 9",
-            description="Factoring monic and non-monic quadratics, middle-term splitting, and zero product property.",
+            subject="Data Structures & Algorithms",
+            name="Graph Algorithms & Minimum Spanning Trees",
+            grade_level="Semester 5",
+            semester="Semester 5",
+            course_code="22CS52",
+            description="Prim's and Kruskal's algorithms, cut property, disjoint-set union, and cycle detection.",
         ),
         Topic(
-            subject="Mathematics",
-            name="Systems of Linear Equations",
-            grade_level="Grade 9",
-            description="Solving simultaneous equations using substitution, elimination, and graphical intersections.",
+            subject="Data Structures & Algorithms",
+            name="Dynamic Programming & Memoization",
+            grade_level="Semester 5",
+            semester="Semester 5",
+            course_code="22CS52",
+            description="Optimal substructure, overlapping subproblems, 0/1 knapsack, and sequence alignment.",
         ),
-        # Grade 9 Science
+        # Semester 5 - Operating Systems
         Topic(
-            subject="Science",
-            name="Newton's Laws & Force Interactions",
-            grade_level="Grade 9",
-            description="Inertia, F=ma calculations, and action-reaction pairs vs balanced forces.",
+            subject="Operating Systems",
+            name="Concurrency, Deadlocks & Synchronization",
+            grade_level="Semester 5",
+            semester="Semester 5",
+            course_code="22CS53",
+            description="Mutex locks, semaphores, producer-consumer problem, deadlock conditions, and Banker's algorithm.",
         ),
         Topic(
-            subject="Science",
-            name="Cellular Respiration & Energy Cycles",
-            grade_level="Grade 9",
-            description="Aerobic and anaerobic respiration, glycolysis, ATP synthesis, and gas exchange.",
+            subject="Operating Systems",
+            name="Virtual Memory & Demand Paging",
+            grade_level="Semester 5",
+            semester="Semester 5",
+            course_code="22CS53",
+            description="Page fault handling, TLB reach, LRU/FIFO page replacement, and thrashing mitigation.",
         ),
-        # Grade 10 Mathematics
+        # Semester 3 - Database Management
         Topic(
-            subject="Mathematics",
-            name="Coordinate Geometry & Slope Relationships",
-            grade_level="Grade 10",
-            description="Distance formula, midpoint, parallel vs perpendicular slopes, and linear equations.",
+            subject="Database Management",
+            name="Relational Normalization & Functional Dependencies",
+            grade_level="Semester 3",
+            semester="Semester 3",
+            course_code="22IS32",
+            description="1NF through BCNF decomposition, lossless join property, and dependency preservation.",
         ),
-        # Grade 10 Science
         Topic(
-            subject="Science",
-            name="Electric Circuits & Ohm's Law",
-            grade_level="Grade 10",
-            description="Current division in parallel branches, series resistance, and potential difference.",
+            subject="Database Management",
+            name="Transaction Isolation & 2-Phase Locking",
+            grade_level="Semester 3",
+            semester="Semester 3",
+            course_code="22IS32",
+            description="ACID properties, serializability graphs, read-committed vs repeatable-read, and 2PL protocols.",
         ),
     ]
     db.add_all(topics_data)
     db.flush()
 
-    # 2. Students (24 deterministic students across 4 sections)
+    # 2. Students (24 deterministic college engineering students across active sections)
     students_list = [
-        # Grade 9 - Section A (Math & Science)
-        ("STU-101", "Aarav Patel", "Grade 9", "A"),
-        ("STU-102", "Diya Sengupta", "Grade 9", "A"),
-        ("STU-103", "Kabir Nair", "Grade 9", "A"),
-        ("STU-104", "Ananya Rao", "Grade 9", "A"),
-        ("STU-105", "Ishaan Joshi", "Grade 9", "A"),
-        ("STU-106", "Mira Kulkarni", "Grade 9", "A"),
-        # Grade 9 - Section B (Math & Science)
-        ("STU-107", "Rohan Verma", "Grade 9", "B"),
-        ("STU-108", "Sneha Iyer", "Grade 9", "B"),
-        ("STU-109", "Vihaan Desai", "Grade 9", "B"),
-        ("STU-110", "Pooja Hegde", "Grade 9", "B"),
-        ("STU-111", "Arjun Reddy", "Grade 9", "B"),
-        ("STU-112", "Tanvi Bhat", "Grade 9", "B"),
-        # Grade 10 - Section A (Math & Science)
-        ("STU-113", "Siddharth Menon", "Grade 10", "A"),
-        ("STU-114", "Aditi Rao", "Grade 10", "A"),
-        ("STU-115", "Varun Shenoy", "Grade 10", "A"),
-        ("STU-116", "Kavya Prabhu", "Grade 10", "A"),
-        ("STU-117", "Nikhil Kamath", "Grade 10", "A"),
-        ("STU-118", "Meera D'Souza", "Grade 10", "A"),
-        # Grade 10 - Section B (Math & Science)
-        ("STU-119", "Devansh Sharma", "Grade 10", "B"),
-        ("STU-120", "Rhea Pillai", "Grade 10", "B"),
-        ("STU-121", "Manish Gowda", "Grade 10", "B"),
-        ("STU-122", "Tara Acharya", "Grade 10", "B"),
-        ("STU-123", "Karan Singhania", "Grade 10", "B"),
-        ("STU-124", "Priyanka Shetty", "Grade 10", "B"),
+        # Semester 5 - Section A (DSA & OS)
+        ("1RV23CS001", "Aarav Patel", "Semester 5", "A", "Computer Science & Engineering"),
+        ("1RV23CS002", "Diya Sengupta", "Semester 5", "A", "Computer Science & Engineering"),
+        ("1RV23CS003", "Kabir Nair", "Semester 5", "A", "Computer Science & Engineering"),
+        ("1RV23CS004", "Ananya Rao", "Semester 5", "A", "Computer Science & Engineering"),
+        ("1RV23CS005", "Ishaan Joshi", "Semester 5", "A", "Computer Science & Engineering"),
+        ("1RV23CS006", "Mira Kulkarni", "Semester 5", "A", "Computer Science & Engineering"),
+        # Semester 5 - Section B (DSA & OS)
+        ("1RV23CS007", "Rohan Verma", "Semester 5", "B", "Computer Science & Engineering"),
+        ("1RV23CS008", "Sneha Iyer", "Semester 5", "B", "Computer Science & Engineering"),
+        ("1RV23CS009", "Vihaan Desai", "Semester 5", "B", "Computer Science & Engineering"),
+        ("1RV23CS010", "Pooja Hegde", "Semester 5", "B", "Computer Science & Engineering"),
+        ("1RV23CS011", "Arjun Reddy", "Semester 5", "B", "Computer Science & Engineering"),
+        ("1RV23CS012", "Tanvi Bhat", "Semester 5", "B", "Computer Science & Engineering"),
+        # Semester 3 - Section A (DBMS & OOP)
+        ("1RV24IS001", "Siddharth Menon", "Semester 3", "A", "Information Science & Engineering"),
+        ("1RV24IS002", "Aditi Rao", "Semester 3", "A", "Information Science & Engineering"),
+        ("1RV24IS003", "Varun Shenoy", "Semester 3", "A", "Information Science & Engineering"),
+        ("1RV24IS004", "Kavya Prabhu", "Semester 3", "A", "Information Science & Engineering"),
+        ("1RV24IS005", "Nikhil Kamath", "Semester 3", "A", "Information Science & Engineering"),
+        ("1RV24IS006", "Meera D'Souza", "Semester 3", "A", "Information Science & Engineering"),
+        # Semester 3 - Section B (DBMS & OOP)
+        ("1RV24IS007", "Devansh Sharma", "Semester 3", "B", "Information Science & Engineering"),
+        ("1RV24IS008", "Rhea Pillai", "Semester 3", "B", "Information Science & Engineering"),
+        ("1RV24IS009", "Manish Gowda", "Semester 3", "B", "Information Science & Engineering"),
+        ("1RV24IS010", "Tara Acharya", "Semester 3", "B", "Information Science & Engineering"),
+        ("1RV24IS011", "Karan Singhania", "Semester 3", "B", "Information Science & Engineering"),
+        ("1RV24IS012", "Priyanka Shetty", "Semester 3", "B", "Information Science & Engineering"),
     ]
 
     student_objs = []
-    for code, name, grade, sec in students_list:
-        student = Student(student_id_code=code, full_name=name, grade_level=grade, section=sec)
+    for code, name, sem, sec, dept in students_list:
+        clean_email = code.lower() + "@rvce.edu.in"
+        student = Student(
+            teacher_id=demo_uid,
+            student_id_code=code,
+            full_name=name,
+            grade_level=sem,
+            semester=sem,
+            section=sec,
+            department=dept,
+            email=clean_email,
+        )
         student_objs.append(student)
     db.add_all(student_objs)
     db.flush()
 
-    # 3. Assessments
+    # 3. Assessments (College Examinations, Lab Tests & Quizzes)
+    import json
+    sample_quiz_questions = [
+        {
+            "id": "q1",
+            "question_text": "In a connected, undirected graph with positive edge weights, what does Prim's algorithm compute?",
+            "question_type": "mcq",
+            "options": [
+                "The shortest path between two specific vertices",
+                "A minimum spanning tree connecting all vertices with minimum total edge weight",
+                "The strongly connected components of the graph",
+                "A topological ordering of all vertices"
+            ],
+            "correct_answer": 1,
+            "marks": 2.0,
+            "explanation": "Prim's algorithm is a greedy algorithm that computes a Minimum Spanning Tree (MST) by iteratively growing a tree from an arbitrary root vertex."
+        },
+        {
+            "id": "q2",
+            "question_text": "What is the time complexity of Dijkstra's algorithm implemented with a binary min-heap for a graph with V vertices and E edges?",
+            "question_type": "mcq",
+            "options": [
+                "O(V^2)",
+                "O((V + E) log V)",
+                "O(V + E)",
+                "O(E^2 log V)"
+            ],
+            "correct_answer": 1,
+            "marks": 2.0,
+            "explanation": "Using a binary min-heap, each vertex extraction takes O(log V) and each decrease-key edge relaxation takes O(log V), yielding O((V + E) log V)."
+        },
+        {
+            "id": "q3",
+            "question_text": "Which pair of properties is required for a problem to be solvable via Dynamic Programming?",
+            "question_type": "mcq",
+            "options": [
+                "Greedy choice property and disjoint subproblems",
+                "Optimal substructure and overlapping subproblems",
+                "Linear recurrence and divide-and-conquer",
+                "Acyclic state transition without base cases"
+            ],
+            "correct_answer": 1,
+            "marks": 2.0,
+            "explanation": "Dynamic programming applies specifically when a problem possesses both optimal substructure (optimal solution contains optimal solutions to subproblems) and overlapping subproblems (same subproblems are solved repeatedly)."
+        }
+    ]
+
     assessments_data = [
         Assessment(
-            title="Diagnostic 1: Algebraic Factoring & Trinomials",
-            subject="Mathematics",
-            grade_level="Grade 9",
+            title="CIE-1: Graph Algorithms & Spanning Trees",
+            subject="Data Structures & Algorithms",
+            grade_level="Semester 5",
+            semester="Semester 5",
+            course_code="22CS52",
+            assessment_type="cie_exam",
+            status="graded",
+            passing_score=20.0,
             max_score=50.0,
+            duration_minutes=60,
+            description="First Continuous Internal Evaluation covering Greedy graph heuristics and MST algorithms.",
             assessment_date=now - timedelta(days=14),
         ),
         Assessment(
-            title="Unit 2 Exam: Force Interactions & Newton's Laws",
-            subject="Science",
-            grade_level="Grade 9",
+            title="Lab Assessment 1: Process Scheduling & Threads",
+            subject="Operating Systems",
+            grade_level="Semester 5",
+            semester="Semester 5",
+            course_code="22CS53",
+            assessment_type="lab_test",
+            status="graded",
+            passing_score=40.0,
             max_score=100.0,
+            duration_minutes=120,
+            description="Hands-on POSIX thread implementation and preemptive round-robin scheduler simulation.",
             assessment_date=now - timedelta(days=10),
         ),
         Assessment(
-            title="Formative Quiz: Systems of Linear Equations",
-            subject="Mathematics",
-            grade_level="Grade 9",
+            title="Online Quiz 1: Dynamic Programming Concepts",
+            subject="Data Structures & Algorithms",
+            grade_level="Semester 5",
+            semester="Semester 5",
+            course_code="22CS52",
+            assessment_type="quiz",
+            status="graded",
+            passing_score=16.0,
             max_score=40.0,
+            duration_minutes=25,
+            total_questions=3,
+            quiz_data=json.dumps(sample_quiz_questions),
+            description="Concept check on recurrence formulation, memoization tables, and space optimization.",
             assessment_date=now - timedelta(days=6),
         ),
         Assessment(
-            title="Diagnostic 2: Cellular Respiration & ATP Cycle",
-            subject="Science",
-            grade_level="Grade 9",
+            title="CIE-2: Virtual Memory & Page Replacement",
+            subject="Operating Systems",
+            grade_level="Semester 5",
+            semester="Semester 5",
+            course_code="22CS53",
+            assessment_type="cie_exam",
+            status="graded",
+            passing_score=20.0,
             max_score=50.0,
+            duration_minutes=60,
+            description="Evaluation of demand paging, TLB hit ratio calculation, and page replacement traces.",
             assessment_date=now - timedelta(days=4),
         ),
         Assessment(
-            title="Mid-Term Diagnostic: Coordinate Geometry & Slopes",
-            subject="Mathematics",
-            grade_level="Grade 10",
+            title="Midterm: Relational Schema & Normalization",
+            subject="Database Management",
+            grade_level="Semester 3",
+            semester="Semester 3",
+            course_code="22IS32",
+            assessment_type="midterm",
+            status="graded",
+            passing_score=40.0,
             max_score=100.0,
+            duration_minutes=90,
+            description="Mid-term exam on functional dependency canonical covers and 3NF/BCNF synthesis.",
             assessment_date=now - timedelta(days=3),
         ),
         Assessment(
-            title="Mastery Check: Electric Circuits & Ohm's Law",
-            subject="Science",
-            grade_level="Grade 10",
+            title="Quiz 2: Transaction Management & ACID",
+            subject="Database Management",
+            grade_level="Semester 3",
+            semester="Semester 3",
+            course_code="22IS32",
+            assessment_type="quiz",
+            status="graded",
+            passing_score=24.0,
             max_score=60.0,
+            duration_minutes=30,
+            total_questions=3,
+            quiz_data=json.dumps(sample_quiz_questions),
+            description="Quiz on concurrency anomalies, write-ahead logging, and strict two-phase locking.",
             assessment_date=now - timedelta(days=1),
         ),
     ]
@@ -159,14 +277,14 @@ def seed_demo_data(db: Session, force: bool = False) -> bool:
     db.flush()
 
     # 4. Student Assessment Scores
-    # Distribute realistic scores for Grade 9 students across assessment 1 (Math Factoring)
-    g9_students = [s for s in student_objs if s.grade_level == "Grade 9"]
+    # Distribute realistic scores for Semester 5 students across assessment 1 (DSA MST)
+    g9_students = [s for s in student_objs if s.grade_level == "Semester 5"]
     # Seed Diagnostic 1 (Max 50)
     d1_scores = [22, 45, 38, 18, 48, 36, 24, 44, 40, 20, 42, 34]  # Aarav(22), Ananya(18), Rohan(24), Pooja(20) struggled
     for i, student in enumerate(g9_students):
         sc = d1_scores[i]
         pct = (sc / 50.0) * 100.0
-        fb = "Needs review on non-monic middle-term splitting" if sc <= 24 else "Strong quadratic recognition"
+        fb = "Needs review on Prim's cut property and cycle detection" if sc <= 24 else "Strong minimum spanning tree graph recognition"
         score_entry = StudentAssessmentScore(
             assessment_id=assessments_data[0].id,
             student_id=student.id,
@@ -177,12 +295,12 @@ def seed_demo_data(db: Session, force: bool = False) -> bool:
         )
         db.add(score_entry)
 
-    # Seed Unit 2 Exam (Science - Max 100)
+    # Seed Unit 2 Exam (OS Concurrency - Max 100)
     u2_scores = [68, 88, 74, 52, 94, 82, 46, 85, 78, 54, 91, 76]
     for i, student in enumerate(g9_students):
         sc = u2_scores[i]
         pct = float(sc)
-        fb = "Action-reaction pairs confused with balanced forces" if sc <= 55 else "Good conceptual clarity on F=ma"
+        fb = "Deadlock circular wait confused with resource preemption" if sc <= 55 else "Good conceptual clarity on Peterson's algorithm"
         score_entry = StudentAssessmentScore(
             assessment_id=assessments_data[1].id,
             student_id=student.id,
@@ -193,7 +311,7 @@ def seed_demo_data(db: Session, force: bool = False) -> bool:
         )
         db.add(score_entry)
 
-    # Seed Diagnostic 2 (Science - Max 50)
+    # Seed Diagnostic 2 (OS Virtual Memory - Max 50)
     d2_scores = [35, 46, 32, 21, 48, 42, 36, 44, 38, 24, 45, 40]
     for i, student in enumerate(g9_students):
         sc = d2_scores[i]
@@ -203,13 +321,13 @@ def seed_demo_data(db: Session, force: bool = False) -> bool:
             student_id=student.id,
             score=float(sc),
             percentage=pct,
-            feedback="Distinction between photolysis and glycolysis needs reinforcement" if sc < 30 else "Solid",
+            feedback="Distinction between TLB miss and page fault trap needs reinforcement" if sc < 30 else "Solid",
             recorded_at=now - timedelta(days=4),
         )
         db.add(score_entry)
 
-    # Seed Grade 10 Scores
-    g10_students = [s for s in student_objs if s.grade_level == "Grade 10"]
+    # Seed Semester 3 Scores
+    g10_students = [s for s in student_objs if s.grade_level == "Semester 3"]
     # Mid-term Coordinate Geometry (Max 100)
     g10_math_scores = [72, 89, 58, 92, 64, 85, 76, 90, 62, 88, 55, 94]
     for i, student in enumerate(g10_students):

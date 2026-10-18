@@ -11,10 +11,15 @@ client = TestClient(app)
 
 
 def setup_module():
-    init_db(seed_demo=True)
+    init_db(seed_demo=False)
     db = SessionLocal()
-    db.query(User).filter(User.is_demo == False).delete()
-    db.commit()
+    test_emails = ["ms.smith@parallax.edu", "sarah.smith@parallax.edu", "test.teacher@parallax.edu"]
+    test_users = db.query(User).filter(User.email.in_(test_emails)).all()
+    test_uids = [u.id for u in test_users]
+    if test_uids:
+        db.query(UserSession).filter(UserSession.user_id.in_(test_uids)).delete(synchronize_session=False)
+        db.query(User).filter(User.id.in_(test_uids)).delete(synchronize_session=False)
+        db.commit()
     db.close()
 
 
@@ -134,3 +139,60 @@ def test_invalid_login_credentials():
     })
     assert res2.status_code == 401
     assert res2.json()["detail"] == "Invalid email or password."
+
+
+def test_update_teacher_profile():
+    """Verify that teacher profile updates (name, institution, department, designation) persist properly."""
+    client_test = TestClient(app)
+
+    # 1. Register test teacher
+    reg_email = "test.profile.teacher@parallax.edu"
+    # Ensure clean state for this test email
+    db = SessionLocal()
+    existing = db.query(User).filter(User.email == reg_email).first()
+    if existing:
+        db.query(UserSession).filter(UserSession.user_id == existing.id).delete()
+        db.query(User).filter(User.id == existing.id).delete()
+        db.commit()
+    db.close()
+
+    reg_res = client_test.post("/api/v1/auth/register", json={
+        "email": reg_email,
+        "full_name": "Initial Name",
+        "password": "Password123!@#",
+    })
+    assert reg_res.status_code == 201
+
+    # 2. Check initial profile
+    me_res = client_test.get("/api/v1/auth/me")
+    assert me_res.status_code == 200
+    me_data = me_res.json()
+    assert me_data["full_name"] == "Initial Name"
+    assert me_data["institution"] == "RV College of Engineering (RVCE)"
+
+    # 3. Update profile
+    update_res = client_test.put("/api/v1/auth/profile", json={
+        "full_name": "Dr. Minu Ganapathy",
+        "institution": "RV College of Engineering",
+        "department": "Computer Science & Engineering",
+        "designation": "Associate Professor & HoD",
+    })
+    assert update_res.status_code == 200
+    updated = update_res.json()
+    assert updated["full_name"] == "Dr. Minu Ganapathy"
+    assert updated["designation"] == "Associate Professor & HoD"
+
+    # 4. Verify persistence on new /me request
+    me_res2 = client_test.get("/api/v1/auth/me")
+    assert me_res2.status_code == 200
+    assert me_res2.json()["full_name"] == "Dr. Minu Ganapathy"
+    assert me_res2.json()["designation"] == "Associate Professor & HoD"
+
+    # Cleanup test user
+    db = SessionLocal()
+    clean_user = db.query(User).filter(User.email == reg_email).first()
+    if clean_user:
+        db.query(UserSession).filter(UserSession.user_id == clean_user.id).delete()
+        db.query(User).filter(User.id == clean_user.id).delete()
+        db.commit()
+    db.close()

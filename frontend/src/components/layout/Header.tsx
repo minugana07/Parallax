@@ -1,6 +1,5 @@
 import React from 'react'
 import { Menu, Plus, LogIn, LogOut, Bot } from 'lucide-react'
-import { StatusBadge } from '../common/StatusBadge'
 import { useAuth } from '../../context/AuthContext'
 import type { ConnectionInfo, NavTab } from '../../types'
 
@@ -16,7 +15,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   onMenuToggle,
-  connection,
+  connection: _connection,
   currentTab,
   onCreateAssessmentClick,
   onOpenTeacherAssistant,
@@ -109,15 +108,6 @@ export const Header: React.FC<HeaderProps> = ({
           <Plus className="w-4 h-4" />
           <span>New Assessment</span>
         </button>
-
-        {/* Subtle Connection Status */}
-        <div className="hidden sm:block">
-          <StatusBadge
-            state={connection.state}
-            latencyMs={connection.latencyMs}
-            showPing={connection.state === 'connected'}
-          />
-        </div>
 
         {/* Teacher Profile / Auth status */}
         {isAuthenticated && user ? (

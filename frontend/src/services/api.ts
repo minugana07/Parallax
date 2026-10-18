@@ -4,7 +4,12 @@ import type {
   DashboardOverviewResponse,
   AssessmentResponse,
   AssessmentCreatePayload,
+  AssessmentUpdatePayload,
   AssessmentDetailResponse,
+  BulkScoreSubmissionPayload,
+  AssessmentAIAnalysisResponse,
+  QuizGenerateRequest,
+  QuizGenerateResponse,
   LearningGapSummary,
   FullMemoryChain,
   ClassSectionResponse,
@@ -16,6 +21,7 @@ import type {
   StudentUpdatePayload,
   CSVImportResponse,
   TeacherUser,
+  TeacherProfileUpdatePayload,
   AIStatusResponse,
   GapExplanationResponse,
   InterventionRecommendationResponse,
@@ -149,14 +155,28 @@ export const apiService = {
     return data
   },
 
+  async updateProfile(payload: TeacherProfileUpdatePayload): Promise<TeacherUser> {
+    const data = await request<TeacherUser>('/api/v1/auth/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (data.csrf_token) saveCsrfToken(data.csrf_token)
+    return data
+  },
+
   // 3. Dashboard
   async getDashboardOverview(): Promise<DashboardOverviewResponse> {
     return request<DashboardOverviewResponse>('/api/v1/dashboard/overview')
   },
 
-  // 4. Assessments
-  async getAssessments(): Promise<AssessmentResponse[]> {
-    return request<AssessmentResponse[]>('/api/v1/assessments')
+  // 4. Assessments & Quizzes Workspace
+  async getAssessments(filters?: { class_id?: number; assessment_type?: string }): Promise<AssessmentResponse[]> {
+    const params = new URLSearchParams()
+    if (filters?.class_id !== undefined) params.append('class_id', filters.class_id.toString())
+    if (filters?.assessment_type) params.append('assessment_type', filters.assessment_type)
+    const qs = params.toString() ? `?${params.toString()}` : ''
+    return request<AssessmentResponse[]>(`/api/v1/assessments${qs}`)
   },
 
   async createAssessment(payload: AssessmentCreatePayload): Promise<AssessmentResponse> {
@@ -169,6 +189,42 @@ export const apiService = {
 
   async getAssessmentDetail(id: number): Promise<AssessmentDetailResponse> {
     return request<AssessmentDetailResponse>(`/api/v1/assessments/${id}`)
+  },
+
+  async updateAssessment(id: number, payload: AssessmentUpdatePayload): Promise<AssessmentDetailResponse> {
+    return request<AssessmentDetailResponse>(`/api/v1/assessments/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  },
+
+  async deleteAssessment(id: number): Promise<void> {
+    await request<void>(`/api/v1/assessments/${id}`, {
+      method: 'DELETE',
+    })
+  },
+
+  async recordAssessmentScores(id: number, payload: BulkScoreSubmissionPayload): Promise<AssessmentDetailResponse> {
+    return request<AssessmentDetailResponse>(`/api/v1/assessments/${id}/scores`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+  },
+
+  async importAssessmentScoresCsv(id: number, csvText: string): Promise<AssessmentDetailResponse> {
+    return request<AssessmentDetailResponse>(`/api/v1/assessments/${id}/import-scores`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ csv_text: csvText }),
+    })
+  },
+
+  async analyzeAssessmentAI(id: number): Promise<AssessmentAIAnalysisResponse> {
+    return request<AssessmentAIAnalysisResponse>(`/api/v1/assessments/${id}/ai-analysis`, {
+      method: 'POST',
+    })
   },
 
   // 5. Learning Gaps
@@ -360,6 +416,14 @@ export const apiService = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ intervention_id: interventionId }),
+    })
+  },
+
+  async generateQuizQuestions(payload: QuizGenerateRequest): Promise<QuizGenerateResponse> {
+    return request<QuizGenerateResponse>('/api/v1/ai/generate-quiz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     })
   },
 }

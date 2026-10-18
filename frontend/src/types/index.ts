@@ -42,6 +42,8 @@ export interface DashboardMetrics {
   learning_gaps_count: number
   active_interventions_count: number
   resolved_outcomes_count: number
+  active_semesters_summary?: string
+  active_semesters?: string[]
 }
 
 export interface ClassPerformanceItem {
@@ -138,12 +140,32 @@ export interface DashboardOverviewResponse {
   last_updated: string
 }
 
+export interface QuizQuestion {
+  id: string
+  question_text: string
+  question_type: 'mcq' | 'short_answer' | 'code_snippet' | string
+  options: string[]
+  correct_answer: number
+  marks: number
+  explanation?: string
+}
+
 export interface AssessmentResponse {
   id: number
   title: string
   subject: string
   grade_level: string
+  semester?: string
+  course_code?: string
+  assessment_type: 'cie_exam' | 'quiz' | 'lab_test' | 'assignment' | 'midterm' | 'project' | string
+  status: 'draft' | 'scheduled' | 'completed' | 'graded' | string
+  description?: string
+  duration_minutes?: number
+  passing_score?: number
+  class_id?: number
   max_score: number
+  total_questions?: number
+  has_quiz_data?: boolean
   assessment_date?: string
   average_score?: number
   average_percentage?: number
@@ -154,10 +176,37 @@ export interface AssessmentResponse {
 export interface AssessmentCreatePayload {
   title: string
   subject: string
-  grade_level: string
-  max_score: number
-  assessment_date?: string
+  grade_level?: string
+  semester?: string
+  course_code?: string
   class_id?: number
+  assessment_type?: string
+  status?: string
+  description?: string
+  duration_minutes?: number
+  passing_score?: number
+  max_score: number
+  total_questions?: number
+  quiz_questions?: QuizQuestion[]
+  assessment_date?: string
+}
+
+export interface AssessmentUpdatePayload {
+  title?: string
+  subject?: string
+  grade_level?: string
+  semester?: string
+  course_code?: string
+  class_id?: number
+  assessment_type?: string
+  status?: string
+  description?: string
+  duration_minutes?: number
+  passing_score?: number
+  max_score?: number
+  total_questions?: number
+  quiz_questions?: QuizQuestion[]
+  assessment_date?: string
 }
 
 export interface StudentScoreDetail {
@@ -167,10 +216,60 @@ export interface StudentScoreDetail {
   score: number
   percentage: number
   feedback?: string
+  question_scores?: string
 }
 
 export interface AssessmentDetailResponse extends AssessmentResponse {
+  quiz_questions: QuizQuestion[]
   scores: StudentScoreDetail[]
+}
+
+export interface BulkScoreSubmissionPayload {
+  scores: Array<{
+    student_id: number
+    score: number
+    feedback?: string
+    question_scores?: string
+  }>
+}
+
+export interface CSVScoreImportPayload {
+  csv_text: string
+}
+
+export interface QuestionDifficultyItem {
+  question_id: string
+  question_text: string
+  difficulty_rating: string
+  estimated_success_rate: number
+  common_pitfall: string
+}
+
+export interface AssessmentAIAnalysisResponse {
+  assessment_id: number
+  assessment_title: string
+  overall_performance_summary: string
+  strengths_identified: string[]
+  critical_misconceptions: string[]
+  question_difficulty_breakdown: QuestionDifficultyItem[]
+  recommended_pedagogical_actions: string[]
+  causality_caveat: string
+  model_used: string
+}
+
+export interface QuizGenerateRequest {
+  topic_name: string
+  course_code?: string
+  semester?: string
+  subject?: string
+  question_count?: number
+  difficulty?: 'foundational' | 'intermediate' | 'advanced' | string
+}
+
+export interface QuizGenerateResponse {
+  topic_name: string
+  questions: QuizQuestion[]
+  model_used: string
 }
 
 export interface FullMemoryChain {
@@ -346,10 +445,21 @@ export interface TeacherUser {
   id: number
   email: string
   full_name: string
+  institution?: string
+  department?: string
+  designation?: string
   is_active: boolean
   is_demo: boolean
   created_at?: string
   csrf_token?: string
+}
+
+export interface TeacherProfileUpdatePayload {
+  full_name?: string
+  email?: string
+  institution?: string
+  department?: string
+  designation?: string
 }
 
 export interface AIStatusResponse {

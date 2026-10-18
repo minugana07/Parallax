@@ -122,16 +122,24 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             </button>
 
             <button
+              onClick={() => onNavigateTab('assessments')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/15 text-white border border-white/20 transition-all cursor-pointer"
+            >
+              <FileCheck2 className="w-4 h-4 text-[#35D6D0]" />
+              <span>Assessments & Quizzes</span>
+            </button>
+
+            <button
               onClick={() => onNavigateTab('insights')}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/15 text-white border border-white/20 transition-all cursor-pointer"
             >
               <Compass className="w-4 h-4 text-[#35D6D0]" />
-              <span>Explore Learning Insights</span>
+              <span>Learning Insights</span>
             </button>
 
             <div className="hidden md:flex items-center gap-1.5 text-[11px] text-[#65E6AC] pl-2">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Deterministic Demo Dataset Active</span>
+              <span>Engineering Curricula Active</span>
             </div>
           </div>
         </div>
@@ -141,7 +149,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl p-5 border border-[#E7E6F1] shadow-xs hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-[#77758D]">Classes Taught</span>
+            <span className="text-xs font-semibold text-[#77758D]">Course Sections</span>
             <div className="p-2 rounded-xl bg-[#7657F6]/10 text-[#7657F6]">
               <GraduationCap className="w-4 h-4" />
             </div>
@@ -150,7 +158,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
             {metrics.classes_count}
           </div>
           <p className="text-[11px] text-[#77758D] mt-1">
-            Grade 9 & 10 Sections
+            {metrics.active_semesters_summary || 'Enrolled Course Sections'}
           </p>
         </div>
 

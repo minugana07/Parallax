@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import type { TeacherUser } from '../types'
+import type { TeacherUser, TeacherProfileUpdatePayload } from '../types'
 import { apiService } from '../services/api'
 
 interface AuthContextType {
@@ -13,6 +13,7 @@ interface AuthContextType {
   register: (fullName: string, email: string, password: string) => Promise<void>
   demoLogin: () => Promise<void>
   logout: () => Promise<void>
+  updateProfile: (payload: TeacherProfileUpdatePayload) => Promise<TeacherUser>
   error: string | null
   clearError: () => void
 }
@@ -99,6 +100,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  const updateProfile = async (payload: TeacherProfileUpdatePayload): Promise<TeacherUser> => {
+    setError(null)
+    try {
+      const updated = await apiService.updateProfile(payload)
+      setUser(updated)
+      return updated
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update profile.'
+      setError(msg)
+      throw err
+    }
+  }
+
   const clearError = () => setError(null)
 
   return (
@@ -114,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         demoLogin,
         logout,
+        updateProfile,
         error,
         clearError,
       }}

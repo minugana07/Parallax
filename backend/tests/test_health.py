@@ -60,3 +60,33 @@ def test_api_v1_health_endpoint():
     data = response.json()
     assert data["status"] == "healthy"
     assert data["database"]["connected"] is True
+
+
+def test_openapi_schema_generation():
+    """Verify OpenAPI schema generates without unresolved ForwardRef or Pydantic errors."""
+    schema = app.openapi()
+    assert schema is not None
+    assert "paths" in schema
+    assert "/api/v1/assessments" in schema["paths"]
+    
+    # Verify class_id query parameter schema on list_assessments
+    get_assessments = schema["paths"]["/api/v1/assessments"]["get"]
+    param_names = [p["name"] for p in get_assessments.get("parameters", [])]
+    assert "class_id" in param_names
+
+
+def test_openapi_json_endpoint():
+    """Verify /openapi.json endpoint returns 200 and valid JSON schema."""
+    response = client.get("/openapi.json")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["info"]["title"] == settings.PROJECT_NAME
+    assert "/api/v1/dashboard/overview" in data["paths"]
+    assert "/api/v1/auth/login" in data["paths"]
+
+
+def test_docs_endpoint():
+    """Verify Swagger UI /docs endpoint returns 200."""
+    response = client.get("/docs")
+    assert response.status_code == 200
+

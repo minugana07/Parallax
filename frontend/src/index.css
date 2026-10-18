@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-parallax-midnight: #17152F;
+  --color-parallax-midnight-light: #201E3D;
+  --color-parallax-purple: #7657F6;
+  --color-parallax-purple-light: #8E74F8;
+  --color-parallax-blue: #4388FF;
+  --color-parallax-blue-light: #649FFF;
+  --color-parallax-cyan: #35D6D0;
+  --color-parallax-mint: #65E6AC;
+  --color-parallax-cloud: #F7F7FC;
+  --color-parallax-text: #24223D;
+  --color-parallax-muted: #77758D;
+  --color-parallax-border: #E7E6F1;
+  --color-parallax-amber: #E9B45C;
+  --color-parallax-red: #D96C83;
+}
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #24223D;
+  background-color: #F7F7FC;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background-color: #F7F7FC;
+  color: #24223D;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbars for clean futuristic feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E7E6F1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #77758D;
+}
